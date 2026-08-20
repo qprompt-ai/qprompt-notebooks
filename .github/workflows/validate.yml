@@ -1,0 +1,66 @@
+name: validate
+
+# No GPU here, deliberately -- this only checks the repo's own bookkeeping
+# (specs stay in sync with the notebooks they generate, everything still
+# parses), not the models themselves. Training only ever happens manually
+# in Colab; see .github/workflows/publish-model.yml for the packaging/push
+# half, and README.md for why neither can run training in CI.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: specs are valid JSON
+        run: |
+          python3 << 'EOF'
+          import json, glob
+          for path in glob.glob("specs/*.json"):
+              json.load(open(path))
+              print(path, "OK")
+          EOF
+
+      - name: notebooks match what their specs would generate
+        run: |
+          python3 tools/generate_notebook.py specs/*.json
+          git diff --exit-code notebooks/
+
+      - name: seed data is valid JSONL
+        run: |
+          python3 << 'EOF'
+          import json, glob
+          for path in glob.glob("data/*.jsonl"):
+              with open(path) as f:
+                  for line in f:
+                      if line.strip():
+                          json.loads(line)
+              print(path, "OK")
+          EOF
+
+      - name: notebook code cells parse as valid Python
+        run: |
+          python3 << 'EOF'
+          import json, glob
+
+          def cell_text(cell):
+              source = cell["source"]
+              return source if isinstance(source, str) else "".join(source)
+
+          for path in glob.glob("notebooks/*.ipynb"):
+              nb = json.load(open(path))
+              for i, cell in enumerate(nb["cells"]):
+                  if cell["cell_type"] != "code":
+                      continue
+                  lines = [l for l in cell_text(cell).split("\n") if not l.strip().startswith("!")]
+                  compile("\n".join(lines), f"{path}:cell{i}", "exec")
+              print(path, "OK,", len(nb["cells"]), "cells")
+          EOF

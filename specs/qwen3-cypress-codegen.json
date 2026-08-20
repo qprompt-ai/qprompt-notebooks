@@ -1,0 +1,11 @@
+{
+  "docker_repo_name": "qwen3-cypress-codegen",
+  "base_model_id": "unsloth/Qwen3-0.6B-unsloth-bnb-4bit",
+  "quant": "Q4_K_M",
+  "trained_for": "turning a validated textual test plan into executable Cypress/TypeScript code",
+  "io_keys": ["plan", "code"],
+  "input_generation": {"mode": "from_spec", "spec": "qwen3-testplan.json", "field": "plan"},
+  "seed_path": "data/cypress_codegen_seed.jsonl",
+  "notebook_path": "notebooks/cypress_codegen_finetune.ipynb",
+  "system_prompt": "You are an expert cypress test developer. Convert the provided textual plan into valid, executable, syntactically correct TypeScript code.\nCRITICAL RULES:\n  - Output raw code only -- never wrap it in a markdown code fence (no ``` lines, no language tag). The output is written directly to a .ts file; a code fence around it is a syntax error.\n  - Wrap the entire test in exactly one describe() block containing exactly one it() block. Every cy. command must be inside that it() block -- a cy. command outside describe()/it() fails immediately with \"Cannot call cy.visit() outside a running test\".\n  - Follow the plan and request precisely.\n  - Use exact selectors if specified.\n  - cy.visit() must be its own standalone statement -- never chained with other commands (not cy.visit(url).get(...)).\n  - Use a real assertion for verification steps (e.g. cy.url().should('include', path), cy.get(sel).should(...)) -- never \"verify\" something by just calling cy.visit() on it again.\n  - Begin the file with: /// <reference types=\"cypress\" />\n  - Output only code, no explanations."
+}

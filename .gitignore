@@ -1,0 +1,9 @@
+# Local training artifacts (models, adapters, GGUF exports) -- these are
+# multi-GB Colab outputs, never meant to live in git; push finished GGUFs
+# to Docker Hub / the HF Hub instead (see README.md).
+*.gguf
+*.safetensors
+*.bin
+.ipynb_checkpoints/
+__pycache__/
+.venv/

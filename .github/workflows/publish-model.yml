@@ -1,0 +1,67 @@
+name: publish-model
+
+# Manual only -- there is deliberately no automated quality gate in this
+# repo (see README.md's "Growing the seed data": grading model output is
+# the qprompt agent graph's job, not this one's), so a human reviewing a
+# Colab run's eval output before triggering this is the actual approval
+# step, not something CI can replace.
+#
+# Doesn't train anything either -- GitHub Actions' standard runners have
+# no GPU, so Unsloth fine-tuning still only happens manually in Colab.
+# This picks up where a Colab run leaves off: it already trained a model
+# and pushed the merged GGUF to a Hugging Face Hub repo (set HF_HUB_REPO
+# in the notebook's config cell instead of downloading to the browser --
+# a runner has no way to receive a browser download either way). This
+# job downloads that GGUF and does the `docker model package --push`
+# step scripts/push_model.sh does locally, just without needing the
+# trained-on machine to also have Docker Model Runner installed.
+#
+# Pushes to GHCR (ghcr.io/qprompt/...), not Docker Hub -- a real Docker
+# Hub Organization needs a paid plan, GHCR doesn't. Model Runner supports
+# GHCR the same way it supports Docker Hub (docker.com/blog/publish-ai-
+# models-on-docker-hub confirms tag/push work identically against any
+# registry host). Uses the workflow's own automatically-provided
+# GITHUB_TOKEN to authenticate -- no separate registry secret to create
+# or rotate, just the `packages: write` permission below.
+
+on:
+  workflow_dispatch:
+    inputs:
+      hf_repo:
+        description: "Hugging Face Hub repo the notebook pushed the GGUF to (e.g. QPrompt/qwen3-testplan)"
+        required: true
+      gguf_filename:
+        description: "GGUF filename within that HF repo (e.g. qwen3-testplan.Q4_K_M.gguf)"
+        required: true
+      image_tag:
+        description: "target GHCR tag (e.g. ghcr.io/qprompt/qwen3-testplan:0.6B-Q4_K_M)"
+        required: true
+
+permissions:
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: download GGUF from the Hugging Face Hub
+        run: |
+          pip install -q huggingface_hub
+          python3 << 'EOF' >> "$GITHUB_ENV"
+          from huggingface_hub import hf_hub_download
+          path = hf_hub_download(repo_id="${{ inputs.hf_repo }}", filename="${{ inputs.gguf_filename }}")
+          print(f"GGUF_PATH={path}")
+          EOF
+
+      - name: install Docker Model Runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-model-plugin
+          docker model install-runner
+          docker model version
+
+      - name: log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: package and push
+        run: docker model package --gguf "$GGUF_PATH" --push "${{ inputs.image_tag }}"

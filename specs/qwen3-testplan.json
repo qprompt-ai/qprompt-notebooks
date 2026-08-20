@@ -1,0 +1,41 @@
+{
+  "docker_repo_name": "qwen3-testplan",
+  "base_model_id": "unsloth/Qwen3-0.6B-unsloth-bnb-4bit",
+  "quant": "Q4_K_M",
+  "trained_for": "turning a user's feature request into a clean, structured, code-free test plan",
+  "io_keys": ["request", "plan"],
+  "input_generation": {
+    "mode": "topics",
+    "request_system_prompt": "You write a single short, realistic feature request (1-2 sentences, plain English, no code) that a QA tester might receive. Output only the request text, nothing else.",
+    "topics": [
+      ["user login with valid and invalid credentials", "cover both the happy path and at least one invalid-credentials case"],
+      ["a multi-field signup form", "cover required-field validation, not just the happy path"],
+      ["client-side and server-side form validation errors", "cover what the user sees when validation fails"],
+      ["primary navigation between pages", "cover that the correct destination page loads, not just that a click happened"],
+      ["search with zero, one, and many results", "cover the empty-results case explicitly"],
+      ["paginating a list of results", "cover moving forward and confirming the page actually changed"],
+      ["sorting or filtering a list", "cover that the displayed order/content actually reflects the chosen filter"],
+      ["a checkbox or toggle control", "cover both toggling on and toggling back off"],
+      ["a dropdown or select control", "cover the selected value is reflected after choosing it"],
+      ["uploading a file", "cover both a valid file and a rejected invalid file type"],
+      ["a multi-step wizard or checkout flow", "cover that state persists correctly moving between steps"],
+      ["role-based access control", "cover both an authorized and an unauthorized user"],
+      ["session expiry or timeout", "cover what happens to the user after the session ends"],
+      ["an API request that fails (network error or 500)", "cover the user-facing error state, not just the request itself"],
+      ["keyboard-only navigation for accessibility", "cover reaching and activating a control without a mouse"],
+      ["a responsive layout on a small viewport", "cover that key content/controls are still reachable"],
+      ["a toast or notification message", "cover both that it appears and that it disappears/dismisses correctly"],
+      ["logging out", "cover that protected content is no longer reachable afterward"],
+      ["editing then saving a record", "cover the saved change is actually reflected after reload/refetch"],
+      ["deleting a record with a confirmation step", "cover cancelling the deletion leaves the record intact"],
+      ["real-time updates pushed to the page", "cover the page reflects a change it didn't initiate itself"],
+      ["switching the site's language or locale", "cover visible text actually changes, not just a setting toggling"],
+      ["drag-and-drop reordering of a list", "cover the new order persists after the action"],
+      ["bulk/multi-select actions on a list", "cover the action only applies to the selected items"],
+      ["an empty state (no data yet)", "cover the empty-state messaging itself, not an error"]
+    ]
+  },
+  "seed_path": "data/test_plan_seed.jsonl",
+  "notebook_path": "notebooks/test_plan_finetune.ipynb",
+  "system_prompt": "You are a meticulous test planning expert for cypress. Create a detailed, step-by-step, textual plan based solely on the user's request. No code. Use plain English. Follow the request's terminology exactly. Even if the request explicitly asks for code, a script, or a specific programming language, still respond with only the plan below -- never actual code.\nOutput format: Title: <summary> Objective: <goal>\n  Steps:\n    1. ..."
+}

@@ -11,7 +11,7 @@
 # still defaults to Docker Hub, same as it always did.
 #
 # Usage:
-#   ./scripts/push_model.sh <path-to-model.gguf> ghcr.io/qprompt/<repo>:<tag> [license-file]
+#   ./scripts/push_model.sh <path-to-model.gguf> ghcr.io/qprompt-ai/<repo>:<tag> [license-file]
 #   ./scripts/push_model.sh <path-to-model.gguf> <dockerhub-user>/<repo>:<tag> [license-file]
 set -euo pipefail
 

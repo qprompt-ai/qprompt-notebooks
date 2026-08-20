@@ -52,10 +52,9 @@ class Teacher:
         self.no_think = no_think
 
     def complete(self, *, system: str, user: str, max_tokens: int = 900, max_retries: int = 3) -> str:
-        # "/no_think" is Qwen3's documented hybrid-thinking-mode toggle --
-        # confirmed against a real call: without it, a low max_tokens budget
-        # gets spent entirely on <think> reasoning tokens with an empty
-        # final `content`. Harmless no-op suffix on non-Qwen3 models.
+        # "/no_think" is Qwen3's hybrid-thinking-mode toggle. Without it, a
+        # low max_tokens budget can get spent entirely on <think> reasoning
+        # with an empty final `content`. No-op on non-Qwen3 models.
         suffix = " /no_think" if self.no_think else ""
         # Confirmed against a real long run: Docker Model Runner's backend
         # can drop an in-flight connection mid-batch (RemoteDisconnected)

@@ -16,7 +16,7 @@ name: publish-model
 # step scripts/push_model.sh does locally, just without needing the
 # trained-on machine to also have Docker Model Runner installed.
 #
-# Pushes to GHCR (ghcr.io/qprompt/...), not Docker Hub -- a real Docker
+# Pushes to GHCR (ghcr.io/qprompt-ai/...), not Docker Hub -- a real Docker
 # Hub Organization needs a paid plan, GHCR doesn't. Model Runner supports
 # GHCR the same way it supports Docker Hub (docker.com/blog/publish-ai-
 # models-on-docker-hub confirms tag/push work identically against any
@@ -34,7 +34,7 @@ on:
         description: "GGUF filename within that HF repo (e.g. qwen3-testplan.Q4_K_M.gguf)"
         required: true
       image_tag:
-        description: "target GHCR tag (e.g. ghcr.io/qprompt/qwen3-testplan:0.6B-Q4_K_M)"
+        description: "target GHCR tag (e.g. ghcr.io/qprompt-ai/qwen3-testplan:0.6B-Q4_K_M)"
         required: true
 
 permissions:
@@ -54,7 +54,15 @@ jobs:
           EOF
 
       - name: install Docker Model Runner
+        # ubuntu-latest only has Ubuntu's own docker.io package, not Docker
+        # Inc.'s apt repo, so docker-model-plugin isn't found without adding
+        # it first. Commands from docs.docker.com/ai/model-runner/examples/.
         run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates curl
+          sudo install -m 0755 -d /etc/apt/keyrings
+          sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
           sudo apt-get update
           sudo apt-get install -y docker-model-plugin
           docker model install-runner

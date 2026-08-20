@@ -7,7 +7,7 @@ under, a specific one (see specs/*.json's system_prompt field).
 
 Usage:
     python3 scripts/query_model.py \\
-        ghcr.io/qprompt/qwen3-testplan:0.6B-Q4_K_M \\
+        ghcr.io/qprompt-ai/qwen3-testplan:0.6B-Q4_K_M \\
         "Verify that a user can log in with valid credentials."
 
     # public/foreign model, or to force a specific spec/system prompt:
@@ -66,7 +66,7 @@ def _autodetect_spec(model_tag: str) -> Path | None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("model_tag", help="the model tag to query, e.g. ghcr.io/qprompt/qwen3-testplan:0.6B-Q4_K_M")
+    parser.add_argument("model_tag", help="the model tag to query, e.g. ghcr.io/qprompt-ai/qwen3-testplan:0.6B-Q4_K_M")
     parser.add_argument("prompt", help="the user-turn prompt")
     parser.add_argument(
         "--spec",
